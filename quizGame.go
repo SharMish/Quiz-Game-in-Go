@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"time"
 )
 
 type question struct{
@@ -46,6 +47,7 @@ func main(){
 
 	fmt.Println("Welcome to the CSV Quiz Game designed in Go Lang");
 	fileName := flag.String("questions","problems.csv","The CSV file from where questions would be read.")
+	timeLimit := flag.Int("time", 3, "Set a time limit for the quiz")
 	flag.Parse()
 
 	var quiz []question
@@ -53,6 +55,17 @@ func main(){
 	score = 0
 	quiz = generateQuestions(*fileName)
 	var answer string
+
+	fmt.Printf("Press Enter key to start the quiz. Duration of quiz :- %d seconds\n",*timeLimit)
+	fmt.Scanln()
+	timer := time.NewTimer(time.Duration(*timeLimit)*time.Second)
+	defer timer.Stop()
+
+	go func() {
+		<-timer.C
+		fmt.Printf("\nTime's up. You answered %d questions correctly out of a total of %d questions.\n",score, len(quiz))
+		os.Exit(1)
+		}()
 
 	for i, questions := range quiz {
 		fmt.Printf("Question %d :- %s? ",i+1,questions.ques)
@@ -62,6 +75,6 @@ func main(){
 		}
 	}
 
-	fmt.Printf("You answered %d questions correctly out of a total of %d questions.",score, len(quiz))
+	fmt.Printf("You answered %d questions correctly out of a total of %d questions.\n",score, len(quiz))
 
 }
