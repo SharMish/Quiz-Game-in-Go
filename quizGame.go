@@ -4,7 +4,9 @@ import (
 	"encoding/csv"
 	"flag"
 	"fmt"
+	"math/rand"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -13,7 +15,7 @@ type question struct{
 	ans string
 }
 
-func generateQuestions(fileName string) []question{
+func generateQuestions(fileName string, shuffle bool) []question{
 
 	file, err := os.Open(fileName)
 	if err != nil {
@@ -38,6 +40,13 @@ func generateQuestions(fileName string) []question{
 		}
 		quiz = append(quiz, qa)
 	}
+	if shuffle {
+		r := rand.New(rand.NewSource(time.Now().Unix()))
+		for n := len(quiz); n > 0; n-- {
+			randIndex := r.Intn(n)
+			quiz[n-1], quiz[randIndex] = quiz[randIndex], quiz[n-1]
+		}
+	}
 	return quiz
 }
 
@@ -47,13 +56,14 @@ func main(){
 
 	fmt.Println("Welcome to the CSV Quiz Game designed in Go Lang");
 	fileName := flag.String("questions","problems.csv","The CSV file from where questions would be read.")
-	timeLimit := flag.Int("time", 3, "Set a time limit for the quiz")
+	timeLimit := flag.Int("time", 30, "Set a time limit for the quiz")
+	shuffle := flag.Bool("shuffle",false,"Shuffle the order of questions")
 	flag.Parse()
 
 	var quiz []question
 	var score int
 	score = 0
-	quiz = generateQuestions(*fileName)
+	quiz = generateQuestions(*fileName, *shuffle)
 	var answer string
 
 	fmt.Printf("Press Enter key to start the quiz. Duration of quiz :- %d seconds\n",*timeLimit)
@@ -70,7 +80,7 @@ func main(){
 	for i, questions := range quiz {
 		fmt.Printf("Question %d :- %s? ",i+1,questions.ques)
 		fmt.Scan(&answer)
-		if answer == questions.ans{
+		if strings.ToLower(strings.Trim(answer," ")) == strings.ToLower(strings.Trim(questions.ans, " ")){
 			score++;
 		}
 	}
